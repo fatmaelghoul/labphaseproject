@@ -1,29 +1,40 @@
 const jwt = require("jsonwebtoken");
-require("dotenv").config(); // Charger les variables d'environnement
+require("dotenv").config();
+
+const publicRoutes = [
+  "/api/userControllers/login",
+  "/api/userControllers/logout",
+  "/api/userControllers/verifyEmail",
+  "/api/userControllers/register",
+];
+const allowedRoutes = [
+  "/api/admin/login",
+  "/api/admin/logout",
+  "/api/admin/verifyEmail",
+];
 
 module.exports = (req, res, next) => {
-
-  // Vérifiez si la route est autorisée sans token
-  // Vous pouvez définir une liste de routes autorisées sans token ici
-  const allowedRoutes = ["/register", "/login", "/logout"]; // Routes autorisées sans token
-
-  if (allowedRoutes.includes(req.path)) {
+  // Autoriser les routes publiques sans vérification
+  console.log(`Incoming request: ${req.method} ${req.path}`);
+  if (publicRoutes.some((route) => req.path.startsWith(route))) {
     return next();
   }
 
-  const token = req.header("Authorization")?.split(" ")[1]; // Récupérez le token depuis l'en-tête Authorization
+  const authHeader = req.header("Authorization");
 
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res
       .status(401)
       .json({ message: "Access denied. No token provided." });
   }
 
+  const token = authHeader.split(" ")[1];
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Vérifiez le token avec la clé secrète
-    req.user = decoded; // Ajoutez les données décodées à l'objet `req`
-    next(); // Passez au middleware suivant
-  } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Injecter l'utilisateur dans la requête
+    next();
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token." });
   }
 };

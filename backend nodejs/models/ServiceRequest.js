@@ -9,7 +9,7 @@ const serviceRequestSchema = new mongoose.Schema({
   },
   scheduledDate: Date,
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
-  handyman: { type: mongoose.Schema.Types.ObjectId, ref: 'Handyman' }, // peut être vide au début
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // peut être vide au début
   createdAt: { type: Date, default: Date.now }
 });
 
